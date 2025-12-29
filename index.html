@@ -22,7 +22,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amazon Global Finds</title>
+    <title>Global Finds - Top Deals & Picks</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -40,51 +40,24 @@
         .fade-in { animation: fadeIn 0.5s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 切换按钮样式 */
+        /* 市场按钮样式 */
         .market-btn { cursor: pointer; transition: all 0.2s; border: 1px solid #ddd; }
         .market-btn.active { background: #232f3e; color: #FF9900; border-color: #232f3e; }
 
         /* Banner 样式 */
-        .aliexpress-banner {
-            background: linear-gradient(90deg, #FF9900 0%, #FFAC33 100%); /* 亚马逊橙色 */
-            color: #232f3e; /* 亚马逊深蓝文字 */
-            text-align: center;
-            padding: 15px 0; /* 垂直间距 */
-            overflow: hidden;
-            position: relative;
-            z-index: 900; /* 略低于导航栏，高于其他内容 */
-            margin-top: -2px; /* 与导航栏无缝衔接 */
-            border-bottom-left-radius: 15px;
-            border-bottom-right-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .aliexpress-banner:hover {
-            opacity: 0.95;
-            transform: translateY(-2px);
-        }
-        .aliexpress-banner img {
-            max-height: 28px; /* 调整图标大小 */
-            width: auto;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-        .aliexpress-banner span {
-            font-weight: bold;
-            font-size: 1.1rem; /* 调整文字大小 */
-            vertical-align: middle;
-        }
-        @media (max-width: 640px) {
-            .aliexpress-banner { padding: 10px 0; }
-            .aliexpress-banner img { max-height: 24px; margin-right: 5px;}
-            .aliexpress-banner span { font-size: 0.9rem; }
-        }
+        .aliexpress-banner { background: linear-gradient(90deg, #FF9900 0%, #FFAC33 100%); color: #232f3e; text-align: center; padding: 12px 0; overflow: hidden; position: relative; z-index: 900; margin-top: -2px; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        footer { background: #232f3e; color: #999; padding: 40px 20px; font-size: 12px; line-height: 1.6; }
 
         #back-to-top { position: fixed; bottom: 30px; right: 20px; width: 45px; height: 45px; background: #232f3e; color: #FF9900; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 2000; }
         #back-to-top.show { opacity: 1; visibility: visible; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
+
+    <div class="bg-gray-800 text-white text-[10px] py-1 text-center px-4 uppercase tracking-wider">
+        As an Amazon Associate I earn from qualifying purchases. | Como Afiliado de Amazon, percibo ingresos por compras adscritas.
+    </div>
 
     <nav class="glass-nav sticky top-0 z-[1000] px-4 py-3">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -102,29 +75,52 @@
 
     <a href="https://ali.esfinds.com" target="_blank" class="block transition-all duration-200">
         <div class="aliexpress-banner">
-            <div class="max-w-7xl mx-auto flex items-center justify-center">
-                <img src="https://img.alicdn.com/imgextra/i4/O1CN01k04Q8l1f93f0b2G7B_!!6000000003943-2-tps-100-100.png" alt="AliExpress Logo">
-                <span>Discover More on AliExpress!</span>
-                <i class="fa-solid fa-arrow-right ml-3"></i>
+            <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+                <img src="https://img.alicdn.com/imgextra/i4/O1CN01k04Q8l1f93f0b2G7B_!!6000000003943-2-tps-100-100.png" class="h-6 w-auto" alt="AliExpress">
+                <span class="text-sm sm:text-base font-bold underline">Discover Best Sellers on AliExpress!</span>
             </div>
         </div>
     </a>
+
     <main class="max-w-7xl mx-auto px-4 py-6">
+        <div id="search-hint" class="text-[11px] text-gray-500 mb-4 flex items-center gap-2 italic bg-white p-2 rounded border border-dashed border-gray-300">
+            <i class="fa-solid fa-circle-info text-[#FF9900]"></i>
+            <span id="hint-text">Si el link falla, busca en / If link fails, search at: <b>esfinds.com</b></span>
+        </div>
+
         <div id="carousel-container" class="hidden"><div class="swiper mySwiper shadow-lg"><div class="swiper-wrapper" id="carousel-wrapper"></div><div class="swiper-pagination"></div></div></div>
         
-        <div class="flex items-center justify-between mb-6 mt-4"> <h2 class="text-lg font-bold uppercase tracking-wider flex items-center gap-2">
+        <div class="flex items-center justify-between mb-6 mt-4"> 
+            <h2 class="text-lg font-bold uppercase tracking-wider flex items-center gap-2">
                 <span class="w-2 h-6 bg-[#FF9900] rounded-full"></span>
-                <span id="market-title">Amazon Deals</span>
+                <span id="market-title">Deals</span>
             </h2>
-            <span id="stats" class="text-[10px] font-bold text-gray-400">LOADING...</span>
+            <span id="stats" class="text-[10px] font-bold text-gray-400 uppercase">Checking Stock...</span>
         </div>
 
         <div id="product-grid"></div>
         <div id="sentinel" class="py-12 flex flex-col items-center justify-center">
             <div id="loader" class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF9900]"></div>
-            <p id="end-msg" class="hidden text-gray-400 text-sm italic">✨ No more deals found!</p>
+            <p id="end-msg" class="hidden text-gray-400 text-sm italic text-center">
+                ✨ No more deals found for this region.<br>
+                <small class="block mt-2">Prices and availability are accurate as of the date/time indicated and are subject to change.</small>
+            </p>
         </div>
     </main>
+
+    <footer>
+        <div class="max-w-7xl mx-auto">
+            <p class="mb-4">
+                <strong>Legal Disclaimer:</strong> Global Finds is a participant in the Amazon Services LLC Associates Program and Amazon EU Associates Programme, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com and Amazon.es.
+            </p>
+            <p class="mb-4">
+                <strong>Aviso Legal:</strong> Global Finds participa en el Programa de Afiliados de Amazon de la UE, un programa de publicidad para afiliados diseñado para ofrecer a sitios web un modo de obtener comisiones por publicidad, publicitando e incluyendo enlaces a Amazon.es.
+            </p>
+            <p class="text-center pt-6 border-t border-gray-700">
+                &copy; 2025 Global Finds | esfinds.com
+            </p>
+        </div>
+    </footer>
 
     <div id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"><i class="fa-solid fa-chevron-up"></i></div>
 
@@ -140,7 +136,14 @@
         function switchMarket(marketCode) {
             document.querySelectorAll('.market-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn-${marketCode}`).classList.add('active');
-            document.getElementById('market-title').innerText = `${marketCode.toUpperCase()} Exclusive Deals`;
+            
+            // 根据市场切换搜索提示文字（可选，目前已做成双语并存）
+            const hint = document.getElementById('hint-text');
+            if(marketCode === 'es') {
+                document.getElementById('market-title').innerText = `Ofertas en España`;
+            } else {
+                document.getElementById('market-title').innerText = `US Hot Deals`;
+            }
 
             filteredProducts = allProducts.filter(item => 
                 item.marketplace && item.marketplace.toLowerCase() === marketCode
@@ -150,11 +153,10 @@
             document.getElementById('product-grid').innerHTML = '';
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('end-msg').classList.add('hidden');
-            document.getElementById('stats').innerText = `${filteredProducts.length} DEALS`;
+            document.getElementById('stats').innerText = `${filteredProducts.length} PRODUCTS`;
 
             renderCarousel(filteredProducts.slice(0, 5));
             loadMore();
-            
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
@@ -163,11 +165,11 @@
                 const browserLang = (navigator.language || navigator.userLanguage).toLowerCase();
                 const defaultMarket = browserLang.startsWith('es') ? 'es' : 'us';
 
-                const response = await fetch('amazondeals.json');
+                // 请确保 JSON 文件已重命名为 products_data.json
+                const response = await fetch('products_data.json');
                 const data = await response.json();
 
                 allProducts = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
                 switchMarket(defaultMarket);
 
                 const observer = new IntersectionObserver((entries) => {
@@ -185,11 +187,9 @@
 
                 observer.observe(document.getElementById('sentinel'));
                 window.globalObserver = observer;
-
                 window.addEventListener('scroll', () => {
                     document.getElementById('back-to-top').classList.toggle('show', window.scrollY > 800);
                 });
-
             } catch (err) { 
                 console.error(err);
                 document.getElementById('stats').innerText = "ERROR";
@@ -199,12 +199,7 @@
         function renderCarousel(topDeals) {
             const container = document.getElementById('carousel-container');
             const wrapper = document.getElementById('carousel-wrapper');
-            
-            if (topDeals.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-            
+            if (topDeals.length === 0) { container.classList.add('hidden'); return; }
             container.classList.remove('hidden');
             wrapper.innerHTML = topDeals.map(item => `
                 <div class="swiper-slide">
@@ -213,47 +208,39 @@
                     <div class="relative z-20 flex items-center h-full p-6 gap-6 text-white">
                         <img src="${item.item_main_pic}" class="h-32 w-32 md:h-52 md:w-52 rounded-xl object-contain bg-white p-2">
                         <div class="flex-1">
-                            <span class="bg-[#FF9900] text-black text-[10px] font-black px-2 py-1 rounded mb-2 inline-block uppercase">BEST IN ${item.marketplace}</span>
+                            <span class="bg-[#FF9900] text-black text-[10px] font-black px-2 py-1 rounded mb-2 inline-block">AMAZON ${item.marketplace.toUpperCase()}</span>
                             <h3 class="text-lg md:text-2xl font-bold mb-3 line-clamp-2">${item.text_content}</h3>
-                            <a href="${item.affiliate_link}" target="_blank" class="inline-block px-8 py-3 amazon-gradient text-black font-bold rounded-lg shadow-md">Get Deal</a>
+                            <a href="${item.affiliate_link}" target="_blank" class="inline-block px-8 py-3 amazon-gradient text-black font-bold rounded-lg shadow-md">Check Price on Amazon</a>
                         </div>
                     </div>
                 </div>
             `).join('');
-
             if (swiperInstance) swiperInstance.destroy();
-            swiperInstance = new Swiper(".mySwiper", { 
-                loop: true, 
-                autoplay: { delay: 4000 }, 
-                pagination: { el: ".swiper-pagination", clickable: true } 
-            });
+            swiperInstance = new Swiper(".mySwiper", { loop: true, autoplay: { delay: 4000 }, pagination: { el: ".swiper-pagination", clickable: true } });
         }
 
         function loadMore() {
             const grid = document.getElementById('product-grid');
             const batch = filteredProducts.slice(currentIndex, currentIndex + itemsPerPage);
-            
             if (batch.length === 0) {
                 document.getElementById('loader').classList.add('hidden');
                 if (currentIndex > 0) document.getElementById('end-msg').classList.remove('hidden');
                 return;
             }
-
             batch.forEach(item => {
                 const card = document.createElement('div');
                 card.className = "product-card rounded-xl overflow-hidden shadow-sm flex flex-col fade-in";
                 card.setAttribute('data-item', JSON.stringify(item));
-                
                 card.innerHTML = `
                     <a href="${item.affiliate_link}" onclick='tracker.sendClick(${JSON.stringify(item).replace(/'/g, "&apos;")}, "grid_img")' target="_blank" class="block relative aspect-square bg-white">
                         <img src="${item.item_main_pic}" loading="lazy" class="absolute inset-0 w-full h-full object-contain p-3 opacity-0 transition-opacity" onload="this.style.opacity='1'">
-                        <div class="absolute top-2 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">${item.marketplace}</div>
                     </a>
                     <div class="p-3 flex flex-col flex-grow">
                         <h3 class="text-xs font-semibold line-clamp-3 h-12 mb-4 text-gray-800 leading-snug">${item.text_content}</h3>
                         <div class="mt-auto">
-                            <a href="${item.affiliate_link}" target="_blank" class="w-full py-2.5 amazon-gradient text-black text-xs font-bold rounded-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                                Shop Now <i class="fa-solid fa-angle-right"></i>
+                            <p class="text-[9px] text-gray-400 mb-2 italic">*Prices on Amazon site may vary</p>
+                            <a href="${item.affiliate_link}" target="_blank" class="w-full py-2.5 amazon-gradient text-black text-xs font-bold rounded-lg flex items-center justify-center gap-2">
+                                Buy on Amazon <i class="fa-solid fa-angle-right text-[10px]"></i>
                             </a>
                         </div>
                     </div>
@@ -263,7 +250,6 @@
             });
             currentIndex += itemsPerPage;
         }
-
         init();
     </script>
 </body>
