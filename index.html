@@ -22,14 +22,13 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Finds - Personalized Shopping Guide</title>
+    <title>Global Finds - Tu Guía de Compras Personalizada</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* 修改色调：避开 Amazon 品牌深蓝色 #232f3e，改用更中性的深灰蓝 */
         :root { --main-dark: #1a202c; --accent-orange: #f6ad55; }
         .glass-nav { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(12px); border-bottom: 2px solid var(--accent-orange); }
         .swiper { width: 100%; height: 350px; border-radius: 20px; margin-bottom: 30px; }
@@ -64,7 +63,7 @@
             </div>
             
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                <button onclick="switchMarket('es')" id="btn-es" class="market-btn px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase">Spain</button>
+                <button onclick="switchMarket('es')" id="btn-es" class="market-btn px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase">España</button>
                 <button onclick="switchMarket('us')" id="btn-us" class="market-btn px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase">Global</button>
             </div>
         </div>
@@ -81,7 +80,7 @@
         <div class="flex items-center justify-between mb-8 mt-4"> 
             <h2 class="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
                 <span class="w-1.5 h-8 bg-orange-500 rounded-full"></span>
-                <span id="market-title">Selected Picks</span>
+                <span id="market-title">Selecciones del día</span>
             </h2>
             <span id="stats" class="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded">SYNCING...</span>
         </div>
@@ -91,8 +90,8 @@
         <div id="sentinel" class="py-16 flex flex-col items-center justify-center">
             <div id="loader" class="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
             <div id="end-msg" class="hidden text-slate-400 text-sm text-center max-w-md">
-                <p class="font-medium">✨ All current recommendations loaded.</p>
-                <p class="mt-2 text-[11px] leading-relaxed">Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on the relevant Store at the time of purchase will apply to the purchase of this product.</p>
+                <p class="font-medium">✨ Todas las recomendaciones cargadas.</p>
+                <p class="mt-2 text-[11px] leading-relaxed">Los precios y la disponibilidad de los productos son precisos en la fecha/hora indicada y están sujetos a cambios.</p>
             </div>
         </div>
     </main>
@@ -100,17 +99,17 @@
     <footer>
         <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4">
-                <h4 class="text-white font-bold text-lg">About Global Finds</h4>
-                <p>We provide a curated selection of products to help users find the best deals across various marketplaces. Our mission is to simplify your shopping experience with high-quality insights.</p>
+                <h4 class="text-white font-bold text-lg">Sobre Global Finds</h4>
+                <p>Ofrecemos una selección curada de productos para ayudar a los usuarios a encontrar las mejores opciones en diversos mercados. Nuestra misión es simplificar su experiencia de compra.</p>
             </div>
             <div class="space-y-4">
-                <h4 class="text-white font-bold text-lg">Affiliate Disclosure</h4>
-                <p>Global Finds participates in various affiliate marketing programs, which means we may get paid commissions on editorially chosen products purchased through our links to retailer sites.</p>
+                <h4 class="text-white font-bold text-lg">Divulgación de Afiliados</h4>
+                <p>Global Finds participa en varios programas de marketing de afiliados, lo que significa que podemos recibir comisiones por productos elegidos editorialmente y comprados a través de nuestros enlaces.</p>
                 <p><strong>Aviso:</strong> Este sitio web participa en programas de afiliación, lo que nos permite obtener una comisión por las compras realizadas a través de nuestros enlaces.</p>
             </div>
         </div>
         <div class="max-w-7xl mx-auto pt-10 mt-10 border-t border-slate-700 text-center text-slate-500">
-            &copy; 2025 ESFINDS.COM | All Rights Reserved.
+            &copy; 2025 ESFINDS.COM | Todos los derechos reservados.
         </div>
     </footer>
 
@@ -132,7 +131,7 @@
             if(marketCode === 'es') {
                 document.getElementById('market-title').innerText = `Selección España`;
             } else {
-                document.getElementById('market-title').innerText = `Selected Global Picks`;
+                document.getElementById('market-title').innerText = `Selección Global`;
             }
 
             filteredProducts = allProducts.filter(item => 
@@ -143,7 +142,7 @@
             document.getElementById('product-grid').innerHTML = '';
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('end-msg').classList.add('hidden');
-            document.getElementById('stats').innerText = `${filteredProducts.length} ITEMS`;
+            document.getElementById('stats').innerText = `${filteredProducts.length} PRODUCTOS`;
 
             renderCarousel(filteredProducts.slice(0, 5));
             loadMore();
@@ -155,7 +154,6 @@
                 const browserLang = (navigator.language || navigator.userLanguage).toLowerCase();
                 const defaultMarket = browserLang.startsWith('es') ? 'es' : 'us';
 
-                // 请务必将文件名改为 products_data.json
                 const response = await fetch('products_data.json');
                 const data = await response.json();
 
@@ -198,9 +196,9 @@
                     <div class="relative z-20 flex items-center h-full p-8 gap-8 text-white">
                         <img src="${item.item_main_pic}" class="h-32 w-32 md:h-52 md:w-52 rounded-2xl object-contain bg-white p-4 shadow-2xl">
                         <div class="flex-1">
-                            <span class="bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3 inline-block">HOT PICK</span>
+                            <span class="bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3 inline-block">DESTACADO</span>
                             <h3 class="text-xl md:text-3xl font-bold mb-4 line-clamp-2 leading-tight">${item.text_content}</h3>
-                            <a href="${item.affiliate_link}" target="_blank" class="inline-block px-10 py-4 brand-gradient text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-transform">View Product</a>
+                            <a href="${item.affiliate_link}" target="_blank" class="inline-block px-10 py-4 brand-gradient text-white font-bold rounded-xl shadow-lg">Ver producto</a>
                         </div>
                     </div>
                 </div>
@@ -228,8 +226,8 @@
                     <div class="p-4 flex flex-col flex-grow">
                         <h3 class="text-[13px] font-bold line-clamp-3 h-14 mb-4 text-slate-800 leading-snug">${item.text_content}</h3>
                         <div class="mt-auto">
-                            <a href="${item.affiliate_link}" target="_blank" class="w-full py-3 bg-slate-800 text-orange-400 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700 transition-colors">
-                                Check Online <i class="fa-solid fa-external-link text-[10px]"></i>
+                            <a href="${item.affiliate_link}" target="_blank" class="w-full py-3 bg-slate-800 text-orange-400 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700">
+                                Consultar <i class="fa-solid fa-external-link text-[10px]"></i>
                             </a>
                         </div>
                     </div>
