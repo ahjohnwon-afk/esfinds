@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- GA -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5YSD14H3P"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -11,12 +12,12 @@
     const tracker = {
       sendClick: (item, pos) => {
         gtag('event', 'select_item', {
-          items: [{ item_name: item.text_content || item.asin, item_variant: pos, location_id: item.marketplace || 'unknown' }]
+          items: [{ item_name: item.text_content, item_variant: pos, location_id: item.marketplace }]
         });
       },
       sendImpression: (item) => {
         gtag('event', 'view_item', {
-          items: [{ item_name: item.text_content || item.asin, location_id: item.marketplace || 'unknown' }]
+          items: [{ item_name: item.text_content, location_id: item.marketplace }]
         });
       }
     };
@@ -28,238 +29,162 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 
   <style>
-    :root { --main-dark: #1a202c; --accent-orange: #f6ad55; }
-    .glass-nav { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(12px); border-bottom: 2px solid var(--accent-orange); }
-    .swiper { width: 100%; height: 350px; border-radius: 20px; margin-bottom: 30px; }
-    .swiper-slide { position: relative; background: var(--main-dark); }
-    .brand-gradient { background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); }
-    #product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    @media (min-width: 768px) { #product-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
-    @media (min-width: 1280px) { #product-grid { grid-template-columns: repeat(5, 1fr); } }
-    .product-card { transition: all 0.3s; border: 1px solid #edf2f7; background: white; border-radius: 12px; }
-    .fade-in { animation: fadeIn 0.5s ease forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    footer { background: var(--main-dark); color: #a0aec0; padding: 60px 20px; font-size: 13px; line-height: 1.8; }
-    #back-to-top { position: fixed; bottom: 30px; right: 20px; width: 45px; height: 45px; background: var(--main-dark); color: var(--accent-orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 2000; }
-    #back-to-top.show { opacity: 1; visibility: visible; }
+    :root { --main-dark:#1a202c; --accent-orange:#f6ad55; }
+    .glass-nav{background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-bottom:2px solid var(--accent-orange)}
+    .swiper{width:100%;height:350px;border-radius:20px;margin-bottom:30px}
+    .swiper-slide{position:relative;background:var(--main-dark)}
+    .brand-gradient{background:linear-gradient(135deg,#f6ad55 0%,#ed8936 100%)}
+    #product-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(min-width:768px){#product-grid{grid-template-columns:repeat(4,1fr);gap:20px}}
+    @media(min-width:1280px){#product-grid{grid-template-columns:repeat(5,1fr)}}
+    .product-card{border:1px solid #edf2f7;background:white;border-radius:12px;transition:.3s}
+    .fade-in{animation:fadeIn .5s ease forwards}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    footer{background:var(--main-dark);color:#a0aec0;padding:60px 20px;font-size:13px}
   </style>
 </head>
 
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-slate-50 text-slate-900">
 
-  <div class="bg-slate-800 text-slate-300 text-[10px] py-1.5 text-center px-4 tracking-tight uppercase">
-    Como afiliado, percibo ingresos por compras adscritas. | As an associate, I earn from qualifying purchases.
+<div class="bg-slate-800 text-slate-300 text-[10px] py-1.5 text-center uppercase">
+  Como afiliado, percibo ingresos por compras adscritas.
+</div>
+
+<nav class="glass-nav sticky top-0 z-50 px-4 py-3">
+  <div class="max-w-7xl mx-auto flex items-center gap-2">
+    <i class="fa-solid fa-bag-shopping text-orange-400 text-2xl"></i>
+    <span class="text-xl font-extrabold">ES<span class="text-orange-500">FINDS</span></span>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+
+  <div id="carousel-container" class="hidden">
+    <div class="swiper mySwiper shadow-xl">
+      <div class="swiper-wrapper" id="carousel-wrapper"></div>
+      <div class="swiper-pagination"></div>
+    </div>
   </div>
 
-  <nav class="glass-nav sticky top-0 z-[1000] px-4 py-3 shadow-sm">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-bag-shopping text-orange-400 text-2xl"></i>
-        <span class="text-xl font-extrabold tracking-tight">ES<span class="text-orange-500">FINDS</span></span>
-      </div>
-    </div>
-  </nav>
-
-  <main class="max-w-7xl mx-auto px-4 py-8">
-
-    <div id="carousel-container" class="hidden">
-      <div class="swiper mySwiper shadow-xl">
-        <div class="swiper-wrapper" id="carousel-wrapper"></div>
-        <div class="swiper-pagination"></div>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-between mb-8 mt-4">
-      <h2 class="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
-        <span class="w-1.5 h-8 bg-orange-500 rounded-full"></span>
-        <span>Selecciones del día</span>
-      </h2>
-      <span id="stats" class="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded">CARGANDO...</span>
-    </div>
-
-    <div id="product-grid"></div>
-
-    <div id="sentinel" class="py-16 flex flex-col items-center justify-center">
-      <div id="loader" class="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
-      <div id="end-msg" class="hidden text-slate-400 text-sm text-center max-w-md">
-        <p class="font-medium">✨ Todas las recomendaciones cargadas.</p>
-        <p class="mt-2 text-[11px] leading-relaxed">Los precios y la disponibilidad pueden cambiar y se muestran en Amazon.</p>
-      </div>
-    </div>
-  </main>
-
-  <footer>
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-slate-700 pb-10">
-      <div class="space-y-4">
-        <h4 class="text-white font-bold text-lg">Sobre ES Finds</h4>
-        <p>Ofrecemos una selección curada de productos para ayudar a los usuarios en España a encontrar las mejores ofertas.</p>
-      </div>
-      <div class="space-y-4">
-        <h4 class="text-white font-bold text-lg">Divulgación de Afiliados</h4>
-        <p>Este sitio participa en programas de afiliación, por lo que podemos recibir una comisión por compras realizadas a través de nuestros enlaces.</p>
-      </div>
-    </div>
-  </footer>
-
-  <div id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-    <i class="fa-solid fa-arrow-up"></i>
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-xl font-black flex items-center gap-2">
+      <span class="w-1.5 h-8 bg-orange-500 rounded-full"></span>
+      Selecciones del día
+    </h2>
+    <span id="stats" class="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded">
+      CARGANDO…
+    </span>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <div id="product-grid"></div>
 
-  <script>
-    // ✅ 你的网页专属 OneLink TrackID
-    const TRACK_ID = "site_esfinds-20";
+  <div id="sentinel" class="py-16 flex justify-center">
+    <div id="loader" class="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+  </div>
 
-    // ✅ 统一用 amazon.com 入口，OneLink 自动跳转
-    function buildOneLink(asin) {
-      if (!asin) return "#";
-      return `https://www.amazon.com/dp/${encodeURIComponent(asin)}?tag=${encodeURIComponent(TRACK_ID)}`;
-    }
+</main>
 
-    let allProducts = [];
-    let currentIndex = 0;
-    const itemsPerPage = 20;
-    let swiperInstance = null;
+<footer>
+  <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
+    <div>
+      <h4 class="text-white font-bold mb-2">Sobre ES Finds</h4>
+      <p>Selección curada de ofertas actualizadas para usuarios en España.</p>
+    </div>
+    <div>
+      <h4 class="text-white font-bold mb-2">Divulgación</h4>
+      <p>Este sitio obtiene comisiones por compras adscritas.</p>
+    </div>
+  </div>
+</footer>
 
-    async function init() {
-      try {
-        const response = await fetch('products_data.json', { cache: "no-store" });
-        const data = await response.json();
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-        // ✅ 不再按 marketplace 过滤；只要有 asin 就展示
-        allProducts = (Array.isArray(data) ? data : [])
-          .filter(item => item && item.asin)
-          .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+<script>
+/* ===== OneLink 配置 ===== */
+const TRACK_ID = "site_esfinds-20";
+function buildOneLink(asin){
+  if(!asin) return "javascript:void(0)";
+  return `https://www.amazon.com/dp/${encodeURIComponent(asin)}?tag=${TRACK_ID}`;
+}
 
-        document.getElementById('stats').innerText = `${allProducts.length} PRODUCTOS`;
+let allProducts = [];
+let currentIndex = 0;
+const itemsPerPage = 20;
+let swiperInstance = null;
 
-        renderCarousel(allProducts.slice(0, 5));
-        loadMore();
+async function init(){
+  const res = await fetch("products_data.json");
+  const data = await res.json();
 
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
+  allProducts = data.filter(p => p.marketplace?.toLowerCase() === "es");
+  allProducts.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
-            if (entry.target.id === 'sentinel') {
-              loadMore();
-              return;
-            }
+  document.getElementById("stats").innerText = `${allProducts.length} PRODUCTOS`;
 
-            const itemData = JSON.parse(entry.target.getAttribute('data-item'));
-            tracker.sendImpression(itemData);
-            observer.unobserve(entry.target);
-          });
-        }, { rootMargin: '400px' });
+  renderCarousel(allProducts.slice(0,5));
+  loadMore();
+}
 
-        observer.observe(document.getElementById('sentinel'));
-        window.globalObserver = observer;
+function renderCarousel(list){
+  if(!list.length) return;
+  document.getElementById("carousel-container").classList.remove("hidden");
+  const wrap = document.getElementById("carousel-wrapper");
 
-        window.addEventListener('scroll', () => {
-          document.getElementById('back-to-top').classList.toggle('show', window.scrollY > 800);
-        });
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById('stats').innerText = "ERROR";
-      }
-    }
-
-    function renderCarousel(topDeals) {
-      const container = document.getElementById('carousel-container');
-      const wrapper = document.getElementById('carousel-wrapper');
-
-      if (!topDeals.length) { container.classList.add('hidden'); return; }
-      container.classList.remove('hidden');
-
-      wrapper.innerHTML = topDeals.map(item => {
-        const url = buildOneLink(item.asin);
-        return `
-          <div class="swiper-slide">
-            <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
-            <img src="${item.item_main_pic}" class="absolute inset-0 w-full h-full object-cover blur-sm opacity-40">
-            <div class="relative z-20 flex items-center h-full p-8 gap-8 text-white">
-              <img src="${item.item_main_pic}" class="h-32 w-32 md:h-52 md:w-52 rounded-2xl object-contain bg-white p-4 shadow-2xl">
-              <div class="flex-1">
-                <span class="bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3 inline-block">DESTACADO</span>
-                <h3 class="text-xl md:text-3xl font-bold mb-4 line-clamp-2 leading-tight">${item.text_content || item.asin}</h3>
-                <a href="${url}" target="_blank" rel="nofollow noopener"
-                   onclick='tracker.sendClick(${safeJson(item)}, "carousel")'
-                   class="inline-block px-10 py-4 brand-gradient text-white font-bold rounded-xl shadow-lg transition-transform hover:scale-105">
-                  Ver producto
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      if (swiperInstance) swiperInstance.destroy();
-      swiperInstance = new Swiper(".mySwiper", {
-        loop: true,
-        autoplay: { delay: 4000 },
-        pagination: { el: ".swiper-pagination", clickable: true }
-      });
-    }
-
-    function loadMore() {
-      const grid = document.getElementById('product-grid');
-      const batch = allProducts.slice(currentIndex, currentIndex + itemsPerPage);
-
-      if (!batch.length) {
-        document.getElementById('loader').classList.add('hidden');
-        if (currentIndex > 0) document.getElementById('end-msg').classList.remove('hidden');
-        return;
-      }
-
-      batch.forEach(item => {
-        const url = buildOneLink(item.asin);
-
-        const card = document.createElement('div');
-        card.className = "product-card shadow-sm hover:shadow-md flex flex-col fade-in";
-        card.setAttribute('data-item', JSON.stringify(item));
-
-        card.innerHTML = `
-          <a href="${url}" target="_blank" rel="nofollow noopener"
-             onclick='tracker.sendClick(${safeJson(item)}, "grid_img")'
-             class="block relative aspect-square bg-white rounded-t-xl overflow-hidden">
-            <img src="${item.item_main_pic}" loading="lazy"
-                 class="absolute inset-0 w-full h-full object-contain p-4 opacity-0 transition-opacity"
-                 onload="this.style.opacity='1'">
+  wrap.innerHTML = list.map(item=>`
+    <div class="swiper-slide">
+      <div class="absolute inset-0 bg-black/70 z-10"></div>
+      <img src="${item.item_main_pic}" class="absolute inset-0 w-full h-full object-cover opacity-40">
+      <div class="relative z-20 flex items-center h-full p-8 gap-8 text-white">
+        <img src="${item.item_main_pic}" class="h-40 w-40 bg-white p-4 rounded-xl">
+        <div>
+          <h3 class="text-2xl font-bold mb-4">${item.text_content}</h3>
+          <a href="${buildOneLink(item.asin)}" target="_blank"
+             class="px-8 py-4 brand-gradient rounded-xl font-bold">
+             Ver producto
           </a>
-          <div class="p-4 flex flex-col flex-grow">
-            <h3 class="text-[13px] font-bold line-clamp-3 h-14 mb-4 text-slate-800 leading-snug">${escapeHtml(item.text_content || item.asin)}</h3>
-            <div class="mt-auto">
-              <a href="${url}" target="_blank" rel="nofollow noopener"
-                 onclick='tracker.sendClick(${safeJson(item)}, "grid_btn")'
-                 class="w-full py-3 bg-slate-800 text-orange-400 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700">
-                Consultar <i class="fa-solid fa-external-link text-[10px]"></i>
-              </a>
-            </div>
-          </div>
-        `;
-        grid.appendChild(card);
-        if (window.globalObserver) window.globalObserver.observe(card);
-      });
+        </div>
+      </div>
+    </div>
+  `).join("");
 
-      currentIndex += itemsPerPage;
-    }
+  if(swiperInstance) swiperInstance.destroy();
+  swiperInstance = new Swiper(".mySwiper",{loop:true,autoplay:{delay:4000},pagination:{el:".swiper-pagination"}});
+}
 
-    // ✅ 防止 onclick JSON 注入/报错
-    function safeJson(obj) {
-      return JSON.stringify(obj).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/'/g, "\\u0027");
-    }
+function loadMore(){
+  const grid = document.getElementById("product-grid");
+  const batch = allProducts.slice(currentIndex,currentIndex+itemsPerPage);
+  if(!batch.length){
+    document.getElementById("loader").style.display="none";
+    return;
+  }
 
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, s => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[s]));
-    }
+  batch.forEach(item=>{
+    const card = document.createElement("div");
+    card.className="product-card fade-in";
+    card.innerHTML=`
+      <a href="${buildOneLink(item.asin)}" target="_blank" class="block aspect-square p-4">
+        <img src="${item.item_main_pic}" class="w-full h-full object-contain">
+      </a>
+      <div class="p-4">
+        <h3 class="text-sm font-bold mb-3 line-clamp-3">${item.text_content}</h3>
+        <a href="${buildOneLink(item.asin)}" target="_blank"
+           class="block text-center py-2 bg-slate-800 text-orange-400 rounded-xl font-bold">
+           Consultar
+        </a>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
 
-    init();
-  </script>
+  currentIndex += itemsPerPage;
+}
+
+init();
+</script>
+
 </body>
 </html>
