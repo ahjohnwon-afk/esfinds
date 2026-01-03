@@ -13,7 +13,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Global Finds – Best Amazon Deals</title>
-  <meta name="description" content="Discover the best Amazon deals worldwide. High rating, low price, updated daily."/>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
@@ -26,8 +25,7 @@
 .badge-right{right:10px;left:auto;background:#000;font-size:10px}
 .price{background:var(--soft);color:#9a3412;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px}
 .cta{background:var(--dark);color:var(--accent);font-weight:800;padding:10px;border-radius:10px;text-align:center}
-.tab{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer}
-.tab.active{background:#111827;color:#f97316}
+select{appearance:none;background:white}
 </style>
 </head>
 
@@ -40,14 +38,28 @@
 <nav class="bg-white border-b px-4 py-3 sticky top-0 z-50">
   <div class="max-w-7xl mx-auto flex items-center gap-2">
     <i class="fa-solid fa-bag-shopping text-orange-500 text-2xl"></i>
-    <span class="text-xl font-extrabold">GLOBAL<span class="text-orange-500">FINDS</span></span>
+    <span class="text-xl font-extrabold">
+      GLOBAL<span class="text-orange-500">FINDS</span>
+    </span>
   </div>
 </nav>
 
 <main class="max-w-7xl mx-auto px-4 py-8">
 
-  <!-- Category Tabs -->
-  <div id="category-tabs" class="flex gap-2 overflow-x-auto mb-6"></div>
+  <!-- Header Row -->
+  <div class="flex items-center justify-between mb-6 gap-4">
+    <h2 class="text-xl font-black flex items-center gap-2">
+      🔥 Featured Deals
+    </h2>
+
+    <!-- Category Dropdown -->
+    <div class="relative">
+      <select id="categorySelect"
+        class="border border-slate-300 rounded-xl px-4 py-2 pr-10 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400">
+      </select>
+      <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+    </div>
+  </div>
 
   <!-- Products -->
   <div id="product-grid"
@@ -77,8 +89,7 @@ function formatRating(v){
 }
 
 /* =============================
-   Ranking Logic (核心)
-   高评分 + 评论权重 + 低价 + 随机扰动
+   Ranking Logic
 ============================= */
 function scoreProduct(p){
   const rating = Number(p.review_rating || 0);
@@ -86,34 +97,18 @@ function scoreProduct(p){
   const price = Number(p.price_discount || 999);
   const priceFactor = price > 0 ? 1 / Math.sqrt(price) : 0;
   const randomBoost = Math.random() * 0.15;
-
   return (rating * reviews * priceFactor) + randomBoost;
 }
 
 /* =============================
-   Render
+   State
 ============================= */
 let allProducts = [];
 let currentCategory = "All";
 
-function renderTabs(categories){
-  const tabs = document.getElementById("category-tabs");
-  tabs.innerHTML = "";
-
-  ["All", ...categories].forEach(cat=>{
-    const btn = document.createElement("div");
-    btn.className = "tab" + (cat === currentCategory ? " active" : "");
-    btn.innerText = cat;
-    btn.onclick = () => {
-      currentCategory = cat;
-      renderProducts();
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      btn.classList.add("active");
-    };
-    tabs.appendChild(btn);
-  });
-}
-
+/* =============================
+   Render
+============================= */
 function renderProducts(){
   const grid = document.getElementById("product-grid");
   grid.innerHTML = "";
@@ -134,7 +129,7 @@ function renderProducts(){
         <div class="relative bg-slate-100 aspect-square">
           ${p.discount_percent ? `<span class="badge">-${p.discount_percent}%</span>` : ""}
           <span class="badge badge-right">Amazon</span>
-          <a href="${buildLink(p.asin)}" target="_blank" rel="nofollow">
+          <a href="${buildLink(p.asin)}" target="_blank">
             <img src="${p.main_image}" class="w-full h-full object-contain p-6">
           </a>
         </div>
@@ -161,6 +156,23 @@ function renderProducts(){
     });
 }
 
+function renderCategorySelect(categories){
+  const select = document.getElementById("categorySelect");
+  select.innerHTML = "";
+
+  ["All", ...categories].forEach(cat=>{
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    select.appendChild(opt);
+  });
+
+  select.onchange = () => {
+    currentCategory = select.value;
+    renderProducts();
+  };
+}
+
 /* =============================
    Init
 ============================= */
@@ -172,7 +184,7 @@ async function init(){
     allProducts.map(p => p.category_name).filter(Boolean)
   )].sort();
 
-  renderTabs(categories);
+  renderCategorySelect(categories);
   renderProducts();
 }
 
