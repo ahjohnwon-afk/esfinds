@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- GA -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5YSD14H3P"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -25,8 +24,8 @@
 .badge-right{right:10px;left:auto;background:#000;font-size:10px}
 .price{background:var(--soft);color:#9a3412;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px}
 .cta{background:var(--dark);color:var(--accent);font-weight:800;padding:10px;border-radius:10px;text-align:center}
-.tab-btn{padding:10px 18px;border-radius:999px;font-weight:800;font-size:14px}
-.tab-active{background:var(--dark);color:var(--accent)}
+/* 分页小圆点动画 */
+.dot-active { width: 24px !important; background-color: var(--accent) !important; border-radius: 4px; }
 </style>
 </head>
 
@@ -47,43 +46,31 @@
 
 <main class="max-w-7xl mx-auto px-4 py-8">
 
-  <!-- TABS -->
-  <div class="flex gap-3 mb-6">
-    <button id="tabDeals" class="tab-btn tab-active">🔥 Featured Deals</button>
-    <button id="tabPromos" class="tab-btn bg-white border">🎟️ Promo Codes</button>
-  </div>
-
-  <!-- ================= DEALS TAB ================= -->
-  <section id="dealsTab">
-
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-black">Top Rated & Low Price</h2>
-
-      <select id="categorySelect"
-        class="border border-slate-300 rounded-xl px-4 py-2 text-sm font-semibold">
-      </select>
-    </div>
-
-    <div id="product-grid"
-      class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
-    </div>
-  </section>
-
-  <!-- ================= PROMO TAB ================= -->
-  <section id="promoTab" class="hidden">
-
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-black">🎟️ Active Promo Codes</h2>
+  <section id="promo-section" class="mb-10 hidden">
+    <div class="flex items-center justify-between mb-4 gap-4">
+      <div class="flex items-center gap-4">
+        <h2 class="text-lg font-black">🎟️ Active Promo Codes</h2>
+        <div id="promo-dots" class="flex gap-1.5"></div>
+      </div>
 
       <select id="promoCategorySelect"
-        class="border border-slate-300 rounded-xl px-4 py-2 text-sm font-semibold">
+        class="border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-orange-500">
       </select>
     </div>
 
-    <div id="promo-list"
-      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div id="promo-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     </div>
   </section>
+
+  <div class="flex items-center justify-between mb-6 gap-4 border-t pt-8">
+    <h2 class="text-xl font-black">🔥 Featured Deals</h2>
+    <select id="categorySelect"
+      class="border border-slate-300 rounded-xl px-4 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-orange-500">
+    </select>
+  </div>
+
+  <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+  </div>
 
 </main>
 
@@ -93,120 +80,179 @@ const TRACK_ID = "site_esfinds-20";
 const PRODUCT_URL = "products_data_v.json";
 const PROMO_URL = "promo_codes.json";
 
-/* ================= UTILS ================= */
-const now = () => new Date();
-const buildLink = asin => `https://www.amazon.com/dp/${asin}?tag=${TRACK_ID}`;
-const fPrice = v => Number(v||0).toFixed(2);
-const fRating = v => v ? Number(v).toFixed(1) : "N/A";
-
 /* ================= STATE ================= */
 let allProducts = [];
 let allPromos = [];
 let currentCategory = "All";
+let promoPage = 0;
+const PROMOS_PER_PAGE = 3; // 确保大屏幕只显示一行三个
 
-/* ================= SCORE ================= */
+/* ================= UTILS ================= */
+function buildLink(asin){
+  return `https://www.amazon.com/dp/${asin}?tag=${TRACK_ID}`;
+}
+function formatPrice(v){return Number(v||0).toFixed(2);}
+function formatRating(v){return v ? Number(v).toFixed(1) : "N/A";}
+function now(){return new Date();}
+
+/* ================= PROMO LOGIC ================= */
+function isPromoActive(p){
+  const today = now();
+  return new Date(p.start_at) <= today && today <= new Date(p.end_at);
+}
+
+function renderPromoCategories(){
+  const sel = document.getElementById("promoCategorySelect");
+  const cats = [...new Set(allPromos.map(p=>p.category))].sort();
+  sel.innerHTML = `<option value="All">All Categories</option>`;
+  cats.forEach(c=>{
+    sel.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+  sel.onchange = () => { promoPage = 0; renderPromos(sel.value); };
+}
+
+function renderPromos(cat="All"){
+  const box = document.getElementById("promo-list");
+  const dotsContainer = document.getElementById("promo-dots");
+  box.innerHTML = "";
+  dotsContainer.innerHTML = "";
+
+  // 1. 过滤：必须未过期 && 符合类别
+  const filtered = allPromos.filter(p => 
+    isPromoActive(p) && (cat === "All" || p.category === cat)
+  );
+
+  if(filtered.length === 0){
+    document.getElementById("promo-section").classList.add("hidden");
+    return;
+  }
+  document.getElementById("promo-section").classList.remove("hidden");
+
+  // 2. 分页计算
+  const totalPages = Math.ceil(filtered.length / PROMOS_PER_PAGE);
+  const start = promoPage * PROMOS_PER_PAGE;
+  const currentItems = filtered.slice(start, start + PROMOS_PER_PAGE);
+
+  // 3. 渲染分页圆点
+  if(totalPages > 1){
+    for(let i=0; i<totalPages; i++){
+      const dot = document.createElement("button");
+      dot.className = `h-2 w-2 rounded-full transition-all duration-300 ${i === promoPage ? 'dot-active bg-orange-500' : 'bg-slate-300'}`;
+      dot.onclick = () => { promoPage = i; renderPromos(cat); };
+      dotsContainer.appendChild(dot);
+    }
+  }
+
+  // 4. 渲染卡片
+  currentItems.forEach(p => {
+    const div = document.createElement("div");
+    // 点击整个卡片即复制
+    div.className = "group border-2 border-slate-100 hover:border-orange-500 rounded-2xl bg-white p-4 transition-all cursor-pointer relative flex flex-col gap-2";
+    div.onclick = () => copyAndGo(p.promo_code, p.brand);
+    
+    div.innerHTML = `
+      <div class="flex justify-between items-start">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-orange-500">${p.category}</span>
+        <span class="text-[10px] text-slate-400">Ends ${new Date(p.end_at).toLocaleDateString()}</span>
+      </div>
+      <div class="text-sm font-bold text-slate-800">Save ${p.discount_percent}% on ${p.brand}</div>
+      <div class="mt-2 flex items-center justify-between bg-slate-50 border border-dashed border-slate-300 rounded-lg p-2 group-hover:bg-orange-50 group-hover:border-orange-200">
+        <code class="text-sm font-mono font-black text-slate-700">${p.promo_code}</code>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">TAP TO COPY</span>
+      </div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+function copyAndGo(code, brand){
+  navigator.clipboard.writeText(code);
+  // 简单的视觉反馈
+  const tempAlert = document.createElement("div");
+  tempAlert.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-full z-[100] text-sm font-bold shadow-xl animate-bounce";
+  tempAlert.innerText = `Code ${code} Copied!`;
+  document.body.appendChild(tempAlert);
+  
+  setTimeout(() => {
+    tempAlert.remove();
+    const match = allProducts.find(p => p.title?.toLowerCase().includes(brand.toLowerCase()));
+    window.open(match ? buildLink(match.asin) : "https://www.amazon.com/?tag="+TRACK_ID);
+  }, 800);
+}
+
+/* ================= PRODUCT LOGIC ================= */
 function scoreProduct(p){
-  const r = Number(p.review_rating||0);
-  const c = Math.log10((p.review_count||0)+1);
-  const pr = Number(p.price_discount||999);
-  return r*c*(1/Math.sqrt(pr)) + Math.random()*0.15;
+  const rating = Number(p.review_rating || 0);
+  const reviews = Math.log10((p.review_count || 0) + 1);
+  const price = Number(p.price_discount || 999);
+  const priceFactor = price > 0 ? 1 / Math.sqrt(price) : 0;
+  return rating * reviews * priceFactor + Math.random()*0.15;
 }
 
-/* ================= TABS ================= */
-function showTab(tab){
-  dealsTab.classList.toggle("hidden", tab!=="deals");
-  promoTab.classList.toggle("hidden", tab!=="promo");
-  tabDeals.classList.toggle("tab-active", tab==="deals");
-  tabPromos.classList.toggle("tab-active", tab==="promo");
-}
-tabDeals.onclick=()=>showTab("deals");
-tabPromos.onclick=()=>showTab("promo");
-
-/* ================= PRODUCTS ================= */
 function renderProducts(){
-  product-grid.innerHTML="";
-  let list=currentCategory==="All"?allProducts:
-    allProducts.filter(p=>p.category_name===currentCategory);
+  const grid=document.getElementById("product-grid");
+  grid.innerHTML="";
+  let list = currentCategory === "All" ? allProducts : allProducts.filter(p=>p.category_name === currentCategory);
 
   list.map(p=>({...p,_s:scoreProduct(p)}))
     .sort((a,b)=>b._s-a._s)
     .slice(0,60)
     .forEach(p=>{
-      product-grid.innerHTML+=`
-      <div class="product-card">
-        <div class="relative bg-slate-100 aspect-square">
-          ${p.discount_percent?`<span class="badge">-${p.discount_percent}%</span>`:""}
-          <span class="badge badge-right">Amazon</span>
-          <a href="${buildLink(p.asin)}" target="_blank">
-            <img src="${p.main_image}" class="w-full h-full object-contain p-6">
-          </a>
+      const d=document.createElement("div");
+      d.className="product-card";
+      d.innerHTML=`
+      <div class="relative bg-slate-100 aspect-square">
+        ${p.discount_percent?`<span class="badge">-${p.discount_percent}%</span>`:""}
+        <span class="badge badge-right">Amazon</span>
+        <a href="${buildLink(p.asin)}" target="_blank">
+          <img src="${p.main_image}" class="w-full h-full object-contain p-6" loading="lazy">
+        </a>
+      </div>
+      <div class="p-4 flex flex-col gap-2">
+        <h3 class="text-sm font-bold line-clamp-3 h-12">${p.title}</h3>
+        <div class="flex justify-between items-center mt-auto">
+          <span class="price">${p.currency}${formatPrice(p.price_discount)}</span>
+          ${p.price_original?`<span class="line-through text-slate-400 text-[10px]">${p.currency}${formatPrice(p.price_original)}</span>`:""}
         </div>
-        <div class="p-4 flex flex-col gap-2">
-          <h3 class="text-sm font-bold line-clamp-3">${p.title}</h3>
-          <div class="flex justify-between text-xs">
-            <span class="price">${p.currency}${fPrice(p.price_discount)}</span>
-            ${p.price_original?`<span class="line-through text-slate-400">${p.currency}${fPrice(p.price_original)}</span>`:""}
-          </div>
-          <div class="text-[11px] text-slate-500">
-            ⭐ ${fRating(p.review_rating)} (${p.review_count||0})
-          </div>
-          <a href="${buildLink(p.asin)}" target="_blank" class="cta">View Deal</a>
+        <div class="text-[11px] text-slate-500">
+          ⭐ ${formatRating(p.review_rating)} (${p.review_count||0})
         </div>
+        <a href="${buildLink(p.asin)}" target="_blank" class="cta text-xs">View Deal</a>
       </div>`;
+      grid.appendChild(d);
     });
 }
 
 function renderCategorySelect(cats){
-  categorySelect.innerHTML="<option>All</option>";
-  cats.forEach(c=>categorySelect.innerHTML+=`<option>${c}</option>`);
-  categorySelect.onchange=()=>{currentCategory=categorySelect.value;renderProducts();}
-}
-
-/* ================= PROMOS ================= */
-const promoActive=p=>new Date(p.start_at)<=now()&&now()<=new Date(p.end_at);
-
-function renderPromoCategories(){
-  promoCategorySelect.innerHTML="<option>All</option>";
-  [...new Set(allPromos.map(p=>p.category))].sort()
-    .forEach(c=>promoCategorySelect.innerHTML+=`<option>${c}</option>`);
-  promoCategorySelect.onchange=()=>renderPromos(promoCategorySelect.value);
-}
-
-function renderPromos(cat="All"){
-  promo-list.innerHTML="";
-  allPromos.filter(p=>promoActive(p)&&(cat==="All"||p.category===cat))
-    .forEach(p=>{
-      promo-list.innerHTML+=`
-      <div class="border rounded-xl bg-white p-4">
-        <div class="text-xs font-bold text-orange-500">${p.category}</div>
-        <div class="font-semibold text-sm">
-          Save ${p.discount_percent}% on ${p.brand}
-        </div>
-        <div class="flex justify-between items-center mt-2">
-          <code class="bg-slate-100 px-3 py-1 rounded">${p.promo_code}</code>
-          <button class="text-orange-500 font-bold text-xs"
-            onclick="navigator.clipboard.writeText('${p.promo_code}');
-              window.open('https://www.amazon.com/?tag=${TRACK_ID}')">
-            Copy & Shop →
-          </button>
-        </div>
-      </div>`;
-    });
+  const sel=document.getElementById("categorySelect");
+  sel.innerHTML=`<option>All</option>`;
+  cats.forEach(c=>sel.innerHTML+=`<option>${c}</option>`);
+  sel.onchange=()=>{currentCategory=sel.value;renderProducts();}
 }
 
 /* ================= INIT ================= */
 async function init(){
-  allProducts = await (await fetch(PRODUCT_URL)).json();
-  allPromos = await (await fetch(PROMO_URL)).json();
+  try {
+    const [pData, promoData] = await Promise.all([
+      fetch(PRODUCT_URL).then(r => r.json()),
+      fetch(PROMO_URL).then(r => r.json())
+    ]);
 
-  renderPromoCategories();
-  renderPromos();
+    allProducts = pData;
+    // 初始化时就过滤掉过期的
+    allPromos = promoData.filter(isPromoActive);
 
-  renderCategorySelect(
-    [...new Set(allProducts.map(p=>p.category_name).filter(Boolean))].sort()
-  );
-  renderProducts();
+    renderPromoCategories();
+    renderPromos();
+
+    const cats=[...new Set(allProducts.map(p=>p.category_name).filter(Boolean))].sort();
+    renderCategorySelect(cats);
+    renderProducts();
+  } catch (e) {
+    console.error("Initialization failed", e);
+  }
 }
+
 init();
 </script>
 
