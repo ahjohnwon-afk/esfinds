@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- GA -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5YSD14H3P"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -14,7 +15,8 @@
   <title>Global Finds – Best Amazon Deals</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 
 <style>
 :root{--dark:#111827;--accent:#f97316;--soft:#ffedd5}
@@ -24,8 +26,8 @@
 .badge-right{right:10px;left:auto;background:#000;font-size:10px}
 .price{background:var(--soft);color:#9a3412;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px}
 .cta{background:var(--dark);color:var(--accent);font-weight:800;padding:10px;border-radius:10px;text-align:center}
-.tab-active{border-bottom:3px solid var(--accent);color:var(--accent)}
-.dot-active{width:24px!important;background:var(--accent)!important;border-radius:6px}
+.tab-active{color:#f97316;border-bottom:3px solid #f97316}
+.dot-active{width:24px!important;background:#f97316!important;border-radius:4px}
 </style>
 </head>
 
@@ -38,147 +40,236 @@
 <nav class="bg-white border-b px-4 py-3 sticky top-0 z-50">
   <div class="max-w-7xl mx-auto flex items-center gap-2">
     <i class="fa-solid fa-bag-shopping text-orange-500 text-2xl"></i>
-    <span class="text-xl font-extrabold">GLOBAL<span class="text-orange-500">FINDS</span></span>
+    <span class="text-xl font-extrabold">
+      GLOBAL<span class="text-orange-500">FINDS</span>
+    </span>
   </div>
 </nav>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
+<main class="max-w-7xl mx-auto px-4 py-6">
 
   <!-- Tabs -->
-  <div class="flex gap-6 mb-6 text-sm font-bold">
-    <button id="tabDeals" class="tab-active">🔥 Featured Deals</button>
-    <button id="tabPromo">🎟️ Active Promo Codes</button>
+  <div class="flex gap-6 mb-6 border-b">
+    <button id="tabDeals" class="pb-3 font-black tab-active">
+      🔥 Featured Deals
+    </button>
+    <button id="tabPromo" class="pb-3 font-black hidden">
+      🎟️ Active Promo Codes
+    </button>
   </div>
 
-  <!-- PROMO -->
+  <!-- PROMO SECTION -->
   <section id="promo-section" class="hidden mb-10">
-    <div class="flex justify-between mb-4">
-      <select id="promoCategory" class="border rounded-xl px-4 py-2 text-sm font-bold"></select>
+    <div class="flex items-center justify-between mb-4 gap-4">
+      <div class="flex items-center gap-4">
+        <h2 class="text-lg font-black">🎟️ Active Promo Codes</h2>
+        <div id="promo-dots" class="flex gap-1.5"></div>
+      </div>
+
+      <select id="promoCategorySelect"
+        class="border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-orange-500">
+      </select>
     </div>
-    <div id="promo-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+    <div id="promo-list"
+         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    </div>
   </section>
 
-  <!-- DEALS -->
+  <!-- DEAL SECTION -->
   <section id="deal-section">
-    <div class="flex justify-between mb-4">
-      <select id="categorySelect" class="border rounded-xl px-4 py-2 text-sm font-bold"></select>
+    <div class="flex items-center justify-between mb-6 gap-4">
+      <h2 class="text-xl font-black">🔥 Featured Deals</h2>
+      <select id="categorySelect"
+        class="border border-slate-300 rounded-xl px-4 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-orange-500">
+      </select>
     </div>
-    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+
+    <div id="product-grid"
+         class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+    </div>
   </section>
 
 </main>
 
 <script>
+/* ================= CONFIG ================= */
 const TRACK_ID = "site_esfinds-20";
 const PRODUCT_URL = "products_data_v.json";
-const PROMO_URL = "promo_codes.json";
+const PROMO_URL   = "promo_codes.json";
 
-let products=[], promos=[];
-let currentCategory="All";
+/* ================= DOM ================= */
+const promoSection = document.getElementById("promo-section");
+const dealSection  = document.getElementById("deal-section");
+const tabDeals     = document.getElementById("tabDeals");
+const tabPromo     = document.getElementById("tabPromo");
 
-const buildLink = asin => `https://www.amazon.com/dp/${asin}?tag=${TRACK_ID}`;
-const fmtP = v => Number(v||0).toFixed(2);
-const fmtR = v => v ? Number(v).toFixed(1) : "N/A";
-const now = () => new Date();
+/* ================= STATE ================= */
+let allProducts = [];
+let allPromos   = [];
+let currentCategory = "All";
+let promoPage = 0;
+const PROMOS_PER_PAGE = 3;
 
-/* ---------- Tabs ---------- */
+/* ================= UTILS ================= */
+function buildLink(asin){
+  return `https://www.amazon.com/dp/${asin}?tag=${TRACK_ID}`;
+}
+function now(){ return new Date(); }
+function formatPrice(v){ return Number(v||0).toFixed(2); }
+function formatRating(v){ return v ? Number(v).toFixed(1) : "N/A"; }
+
+/* ================= TAB SWITCH ================= */
 tabDeals.onclick = () => {
-  dealSection.style.display="block";
-  promoSection.style.display="none";
+  dealSection.classList.remove("hidden");
+  promoSection.classList.add("hidden");
   tabDeals.classList.add("tab-active");
   tabPromo.classList.remove("tab-active");
 };
+
 tabPromo.onclick = () => {
-  promoSection.style.display="block";
-  dealSection.style.display="none";
+  promoSection.classList.remove("hidden");
+  dealSection.classList.add("hidden");
   tabPromo.classList.add("tab-active");
   tabDeals.classList.remove("tab-active");
 };
 
-/* ---------- Promo ---------- */
-const promoSection=document.getElementById("promo-section");
-const dealSection=document.getElementById("deal-section");
+/* ================= PROMO ================= */
+function isPromoActive(p){
+  return new Date(p.start_at) <= now() && now() <= new Date(p.end_at);
+}
 
-function promoActive(p){
-  return new Date(p.start_at)<=now() && now()<=new Date(p.end_at);
+function renderPromoCategories(){
+  const sel = document.getElementById("promoCategorySelect");
+  const cats = [...new Set(allPromos.map(p=>p.category))].sort();
+  sel.innerHTML = `<option value="All">All Categories</option>`;
+  cats.forEach(c => sel.innerHTML += `<option>${c}</option>`);
+  sel.onchange = () => { promoPage = 0; renderPromos(sel.value); };
 }
 
 function renderPromos(cat="All"){
-  const box=document.getElementById("promo-list");
-  box.innerHTML="";
-  promos.filter(p=>promoActive(p)&&(cat==="All"||p.category===cat))
-    .forEach(p=>{
-      const d=document.createElement("div");
-      d.className="border rounded-2xl p-4 cursor-pointer hover:border-orange-500";
-      d.onclick=()=>copyAndGo(p);
-      d.innerHTML=`
-        <div class="text-[10px] text-orange-500 font-bold">${p.category}</div>
-        <div class="font-bold text-sm mt-1">Save ${p.discount_percent}% on ${p.brand}</div>
-        <div class="mt-3 flex justify-between items-center border border-dashed rounded-lg p-2">
-          <code class="font-mono font-black">${p.promo_code}</code>
-          <span class="text-[10px] bg-orange-100 px-2 py-1 rounded font-bold">COPY</span>
-        </div>`;
-      box.appendChild(d);
-    });
+  const list = document.getElementById("promo-list");
+  const dots = document.getElementById("promo-dots");
+  list.innerHTML = ""; dots.innerHTML = "";
+
+  const filtered = allPromos.filter(p =>
+    isPromoActive(p) && (cat==="All" || p.category===cat)
+  );
+  if(!filtered.length) return;
+
+  const totalPages = Math.ceil(filtered.length / PROMOS_PER_PAGE);
+  const pageItems = filtered.slice(
+    promoPage*PROMOS_PER_PAGE,
+    promoPage*PROMOS_PER_PAGE + PROMOS_PER_PAGE
+  );
+
+  if(totalPages > 1){
+    for(let i=0;i<totalPages;i++){
+      const d=document.createElement("button");
+      d.className=`h-2 w-2 ${i===promoPage?"dot-active":"bg-slate-300"} rounded-full`;
+      d.onclick=()=>{promoPage=i;renderPromos(cat);};
+      dots.appendChild(d);
+    }
+  }
+
+  pageItems.forEach(p=>{
+    const div=document.createElement("div");
+    div.className="border-2 rounded-2xl p-4 cursor-pointer hover:border-orange-500";
+    div.onclick=()=>copyAndGo(p.promo_code,p.link);
+    div.innerHTML=`
+      <div class="flex justify-between text-[10px]">
+        <span class="font-bold text-orange-500">${p.category}</span>
+        <span class="text-slate-400">Ends ${new Date(p.end_at).toLocaleDateString()}</span>
+      </div>
+      <div class="font-bold mt-1">
+        Save ${p.discount_percent}% on ${p.brand}
+      </div>
+      <div class="mt-3 flex justify-between bg-slate-50 border-dashed border p-2 rounded">
+        <code class="font-mono font-black">${p.promo_code}</code>
+        <span class="text-orange-600 text-[10px] font-bold">TAP TO COPY</span>
+      </div>
+    `;
+    list.appendChild(div);
+  });
 }
 
-function copyAndGo(p){
-  navigator.clipboard.writeText(p.promo_code);
-  setTimeout(()=>window.open(p.link,"_blank"),400);
+function copyAndGo(code, link){
+  navigator.clipboard.writeText(code);
+  setTimeout(()=>window.open(link,"_blank"),400);
 }
 
-/* ---------- Products ---------- */
-function score(p){
-  return (p.review_rating||0)*Math.log10((p.review_count||0)+1)/(Math.sqrt(p.price_discount||999))+Math.random()*0.15;
+/* ================= PRODUCTS ================= */
+function scoreProduct(p){
+  const r=p.review_rating||0;
+  const c=Math.log10((p.review_count||0)+1);
+  const pr=p.price_discount||999;
+  return r*c*(1/Math.sqrt(pr))+Math.random()*0.15;
 }
 
 function renderProducts(){
   const grid=document.getElementById("product-grid");
   grid.innerHTML="";
-  (currentCategory==="All"?products:products.filter(p=>p.category_name===currentCategory))
-    .map(p=>({...p,s:score(p)}))
-    .sort((a,b)=>b.s-a.s)
-    .slice(0,60)
-    .forEach(p=>{
-      const d=document.createElement("div");
-      d.className="product-card";
-      d.innerHTML=`
-      <div class="relative aspect-square bg-slate-100">
-        ${p.discount_percent?`<span class="badge">-${p.discount_percent}%</span>`:""}
-        <span class="badge badge-right">Amazon</span>
-        <a href="${buildLink(p.asin)}" target="_blank">
-          <img src="${p.main_image}" class="w-full h-full object-contain p-6">
-        </a>
-      </div>
-      <div class="p-4 flex flex-col gap-2">
-        <h3 class="text-sm font-bold line-clamp-3">${p.title}</h3>
-        <div class="flex justify-between">
-          <span class="price">${p.currency}${fmtP(p.price_discount)}</span>
-          ${p.price_original?`<span class="line-through text-xs">${p.currency}${fmtP(p.price_original)}</span>`:""}
+  let list=currentCategory==="All"
+    ?allProducts
+    :allProducts.filter(p=>p.category_name===currentCategory);
+
+  list.map(p=>({...p,_s:scoreProduct(p)}))
+      .sort((a,b)=>b._s-a._s)
+      .slice(0,60)
+      .forEach(p=>{
+        const d=document.createElement("div");
+        d.className="product-card";
+        d.innerHTML=`
+        <div class="relative bg-slate-100 aspect-square">
+          ${p.discount_percent?`<span class="badge">-${p.discount_percent}%</span>`:""}
+          <span class="badge badge-right">Amazon</span>
+          <a href="${buildLink(p.asin)}" target="_blank">
+            <img src="${p.main_image}" class="p-6 object-contain w-full h-full">
+          </a>
         </div>
-        <div class="text-[11px]">⭐ ${fmtR(p.review_rating)} (${p.review_count||0})</div>
-        <a href="${buildLink(p.asin)}" target="_blank" class="cta text-xs">View Deal</a>
-      </div>`;
-      grid.appendChild(d);
-    });
+        <div class="p-4 flex flex-col gap-2">
+          <h3 class="text-sm font-bold line-clamp-3 h-12">${p.title}</h3>
+          <div class="flex justify-between">
+            <span class="price">${p.currency}${formatPrice(p.price_discount)}</span>
+          </div>
+          <div class="text-[11px]">
+            ⭐ ${formatRating(p.review_rating)} (${p.review_count||0})
+          </div>
+          <a href="${buildLink(p.asin)}" target="_blank" class="cta text-xs">View Deal</a>
+        </div>`;
+        grid.appendChild(d);
+      });
 }
 
-/* ---------- Init ---------- */
-(async()=>{
-  products=await fetch(PRODUCT_URL).then(r=>r.json());
-  promos=(await fetch(PROMO_URL).then(r=>r.json())).filter(promoActive);
+function renderCategorySelect(cats){
+  const sel=document.getElementById("categorySelect");
+  sel.innerHTML="<option>All</option>";
+  cats.forEach(c=>sel.innerHTML+=`<option>${c}</option>`);
+  sel.onchange=()=>{currentCategory=sel.value;renderProducts();}
+}
 
-  const cats=[...new Set(products.map(p=>p.category_name).filter(Boolean))].sort();
-  categorySelect.innerHTML="<option>All</option>"+cats.map(c=>`<option>${c}</option>`).join("");
-  categorySelect.onchange=e=>{currentCategory=e.target.value;renderProducts();};
+/* ================= INIT ================= */
+async function init(){
+  const [pd,pr]=await Promise.all([
+    fetch(PRODUCT_URL).then(r=>r.json()),
+    fetch(PROMO_URL).then(r=>r.json())
+  ]);
 
-  const promoCats=[...new Set(promos.map(p=>p.category))].sort();
-  promoCategory.innerHTML="<option>All</option>"+promoCats.map(c=>`<option>${c}</option>`).join("");
-  promoCategory.onchange=e=>renderPromos(e.target.value);
+  allProducts=pd;
+  allPromos=pr.filter(isPromoActive);
 
+  if(allPromos.length){
+    tabPromo.classList.remove("hidden");
+    renderPromoCategories();
+    renderPromos();
+  }
+
+  const cats=[...new Set(allProducts.map(p=>p.category_name).filter(Boolean))].sort();
+  renderCategorySelect(cats);
   renderProducts();
-  renderPromos();
-})();
+}
+
+init();
 </script>
 
 </body>
