@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5YSD14H3P"></script>
   <script>
@@ -35,7 +35,7 @@
 <body class="bg-slate-50 text-slate-900">
 
 <div class="bg-slate-800 text-slate-300 text-[10px] py-1 text-center">
-  As an Amazon Associate, we earn from qualifying purchases.
+  Como Afiliado de Amazon, gano con las compras que cumplan los requisitos.
 </div>
 
 <nav class="bg-white border-b px-4 py-3 sticky top-0 z-50">
@@ -149,9 +149,9 @@ function buildLink(asin){
   if (p && p.affiliate_link) return p.affiliate_link;
 
   // 2) marketplace => domain / suffix
-  const mp = ((p && p.marketplace) ? p.marketplace : "US").toUpperCase();
-  const domain = AMAZON_DOMAIN_MAP[mp] || "amazon.com";
-  const suffix = AMAZON_TAG_SUFFIX_MAP[mp] || "-20";
+  const mp = ((p && p.marketplace) ? p.marketplace : "ES").toUpperCase();  // ✅ 默认 ES（更符合你西班牙初审）
+  const domain = AMAZON_DOMAIN_MAP[mp] || "amazon.es";
+  const suffix = AMAZON_TAG_SUFFIX_MAP[mp] || "-21";
 
   return `https://www.${domain}/dp/${asin}?tag=${TRACK_ID}${suffix}`;
 }
@@ -298,8 +298,8 @@ function copyAndGo(p){
       }
     }
 
-    // 默认回退 US 首页
-    window.open("https://www.amazon.com/?tag="+TRACK_ID+(AMAZON_TAG_SUFFIX_MAP["US"]||"-20"), "_blank");
+    // ✅ 默认回退 ES 首页（更符合你西班牙初审）
+    window.open("https://www.amazon.es/?tag="+TRACK_ID+(AMAZON_TAG_SUFFIX_MAP["ES"]||"-21"), "_blank");
   }, 350);
 }
 
@@ -332,6 +332,12 @@ function renderProducts(){
     .forEach(p=>{
       const d=document.createElement("div");
       d.className="product-card";
+
+      // ✅ 货币单位：优先 currency 字段，其次按 marketplace 猜一个合理默认
+      const cur = (p.currency && String(p.currency).trim()) ? String(p.currency).trim() : (
+        (String(p.marketplace||"").toUpperCase()==="ES" || String(p.marketplace||"").toUpperCase()==="DE" || String(p.marketplace||"").toUpperCase()==="FR" || String(p.marketplace||"").toUpperCase()==="IT") ? "€" : "$"
+      );
+
       d.innerHTML=`
       <div class="relative bg-slate-100 aspect-square">
         ${p.discount_percent?`<span class="badge">-${p.discount_percent}%</span>`:""}
@@ -341,10 +347,12 @@ function renderProducts(){
         </a>
       </div>
       <div class="p-4 flex flex-col gap-2">
-        <h3 class="text-sm font-bold line-clamp-3 h-12">${p.title || ""}</h3>
+        <!-- ✅ FIX：去掉 h-12，避免标题第三行被硬切 -->
+        <h3 class="text-sm font-bold leading-snug line-clamp-3 min-h-[3.6em]">${p.title || ""}</h3>
+
         <div class="flex justify-between items-center mt-auto">
-          <span class="price">${p.currency || "$"}${formatPrice(p.price_discount)}</span>
-          ${p.price_original?`<span class="line-through text-slate-400 text-[10px]">${p.currency || "$"}${formatPrice(p.price_original)}</span>`:""}
+          <span class="price">${cur}${formatPrice(p.price_discount)}</span>
+          ${p.price_original?`<span class="line-through text-slate-400 text-[10px]">${cur}${formatPrice(p.price_original)}</span>`:""}
         </div>
         <div class="text-[11px] text-slate-500">
           ⭐ ${formatRating(p.review_rating)} (${p.review_count||0})
