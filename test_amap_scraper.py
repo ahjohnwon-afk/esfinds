@@ -8,7 +8,22 @@ Amap Scraper Test File
 This test file demonstrates how to use the AmapScraper class in code
 """
 
-from amap_scraper import AmapScraper
+import sys
+import os
+
+# 确保可以导入同目录下的amap_scraper模块
+# Ensure we can import amap_scraper from the same directory
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from amap_scraper import AmapScraper
+except ImportError as e:
+    print(f"错误: 无法导入amap_scraper模块: {e}")
+    print(f"Error: Cannot import amap_scraper module: {e}")
+    print("请确保amap_scraper.py文件在同一目录下")
+    print("Please ensure amap_scraper.py is in the same directory")
+    sys.exit(1)
+
 import json
 
 
