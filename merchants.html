@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沉香商家数据采集系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .map-section {
+            padding: 30px;
+            background: white;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        
+        #china-map {
+            width: 100%;
+            height: 600px;
+            background: #fafafa;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        select, input[type="text"] {
+            padding: 8px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        select:focus, input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .merchants-list {
+            padding: 30px;
+        }
+        
+        .merchants-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .merchants-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .merchants-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .merchants-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .merchants-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .merchants-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .pagination button {
+            padding: 8px 15px;
+            min-width: auto;
+        }
+        
+        .pagination .page-info {
+            font-size: 14px;
+            color: #6c757d;
+            padding: 0 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 16px;
+        }
+        
+        .loading::after {
+            content: '...';
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e7f3ff;
+            color: #0066cc;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-bar {
+                flex-direction: column;
+            }
+            
+            .stat-item {
+                width: 100%;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            select, input[type="text"] {
+                width: 100%;
+            }
+            
+            .merchants-table {
+                font-size: 12px;
+            }
+            
+            .merchants-table th,
+            .merchants-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 沉香商家数据采集系统</h1>
+            <p>全国沉香商家分布可视化 | 数据实时更新</p>
+        </header>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="total-count">0</div>
+                <div class="stat-label">商家总数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="province-count">0</div>
+                <div class="stat-label">覆盖省份</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="update-time">-</div>
+                <div class="stat-label">更新时间</div>
+            </div>
+        </div>
+        
+        <div class="map-section">
+            <h2 class="section-title">📍 全国分布地图</h2>
+            <div id="china-map"></div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="province-filter">省份筛选：</label>
+                <select id="province-filter">
+                    <option value="">全部省份</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="search-input">搜索：</label>
+                <input type="text" id="search-input" placeholder="商家名称、地址...">
+            </div>
+            
+            <button id="export-btn">
+                <span>📥</span>
+                <span>导出Excel</span>
+            </button>
+            
+            <button id="refresh-btn">
+                <span>🔄</span>
+                <span>刷新数据</span>
+            </button>
+        </div>
+        
+        <div class="merchants-list">
+            <h2 class="section-title">📋 商家清单</h2>
+            <div id="merchants-container"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据
+        let allMerchants = [];
+        let filteredMerchants = [];
+        let currentPage = 1;
+        const itemsPerPage = 50;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            setupEventListeners();
+        });
+
+        // 加载数据
+        async function loadData() {
+            showLoading();
+            
+            try {
+                const response = await fetch('merchants_data.json');
+                if (!response.ok) throw new Error('数据加载失败');
+                
+                const data = await response.json();
+                allMerchants = data.merchants || [];
+                
+                // 更新统计信息
+                updateStats(data);
+                
+                // 初始化地图
+                initMap(data.stats_by_province || {});
+                
+                // 初始化省份筛选器
+                initProvinceFilter(data.stats_by_province || {});
+                
+                // 显示商家列表
+                filteredMerchants = [...allMerchants];
+                renderMerchants();
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showError('数据加载失败，请确保 merchants_data.json 文件存在');
+            }
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('merchants-container').innerHTML = 
+                '<div class="loading">正在加载数据</div>';
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('merchants-container').innerHTML = 
+                `<div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div>${message}</div>
+                </div>`;
+        }
+
+        // 更新统计信息
+        function updateStats(data) {
+            document.getElementById('total-count').textContent = data.total_count || 0;
+            document.getElementById('province-count').textContent = 
+                Object.keys(data.stats_by_province || {}).length;
+            
+            if (data.collected_at) {
+                const date = new Date(data.collected_at);
+                document.getElementById('update-time').textContent = 
+                    `${date.getMonth()+1}/${date.getDate()}`;
+            }
+        }
+
+        // 初始化地图
+        function initMap(statsData) {
+            const chart = echarts.init(document.getElementById('china-map'));
+            
+            // 准备地图数据
+            const mapData = Object.entries(statsData).map(([name, value]) => ({
+                name: name.replace(/省|市|自治区|特别行政区/g, ''),
+                value: value
+            }));
+
+            const option = {
+                title: {
+                    text: '沉香商家分布热力图',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 20,
+                        fontWeight: 'bold'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}: {c} 家'
+                },
+                visualMap: {
+                    min: 0,
+                    max: Math.max(...Object.values(statsData), 100),
+                    left: 'left',
+                    top: 'bottom',
+                    text: ['多', '少'],
+                    inRange: {
+                        color: ['#e0f3ff', '#006edd']
+                    },
+                    calculable: true
+                },
+                series: [{
+                    name: '商家数量',
+                    type: 'map',
+                    map: 'china',
+                    roam: true,
+                    emphasis: {
+                        label: {
+                            show: true
+                        },
+                        itemStyle: {
+                            areaColor: '#ffd700',
+                            borderWidth: 2
+                        }
+                    },
+                    data: mapData
+                }]
+            };
+
+            // 加载中国地图
+            fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+                .then(response => response.json())
+                .then(geoJson => {
+                    echarts.registerMap('china', geoJson);
+                    chart.setOption(option);
+                })
+                .catch(() => {
+                    // 如果外部地图加载失败，使用简化版
+                    console.warn('地图数据加载失败，使用简化版本');
+                });
+
+            // 响应式
+            window.addEventListener('resize', () => {
+                chart.resize();
+            });
+        }
+
+        // 初始化省份筛选器
+        function initProvinceFilter(statsData) {
+            const select = document.getElementById('province-filter');
+            
+            Object.keys(statsData).sort().forEach(province => {
+                const option = document.createElement('option');
+                option.value = province;
+                option.textContent = `${province} (${statsData[province]})`;
+                select.appendChild(option);
+            });
+        }
+
+        // 渲染商家列表
+        function renderMerchants() {
+            const container = document.getElementById('merchants-container');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = filteredMerchants.slice(start, end);
+
+            if (pageData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <div>未找到相关商家</div>
+                    </div>
+                `;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            const table = `
+                <table class="merchants-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>商家名称</th>
+                            <th>省份</th>
+                            <th>地址</th>
+                            <th>类别</th>
+                            <th>电话</th>
+                            <th>位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pageData.map((merchant, index) => `
+                            <tr>
+                                <td>${start + index + 1}</td>
+                                <td><strong>${merchant.title || '-'}</strong></td>
+                                <td><span class="badge">${merchant.province || '-'}</span></td>
+                                <td>${merchant.address || '-'}</td>
+                                <td>${merchant.category || '-'}</td>
+                                <td>${merchant.tel || '-'}</td>
+                                <td>${merchant.location ? 
+                                    `${merchant.location.lat.toFixed(4)}, ${merchant.location.lng.toFixed(4)}` : 
+                                    '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = table;
+            renderPagination();
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredMerchants.length / itemsPerPage);
+            const paginationContainer = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(1)">首页</button>
+                <button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">上一页</button>
+                <span class="page-info">第 ${currentPage} / ${totalPages} 页 (共 ${filteredMerchants.length} 条)</span>
+                <button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">下一页</button>
+                <button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${totalPages})">末页</button>
+            `;
+
+            paginationContainer.innerHTML = html;
+        }
+
+        // 跳转页面
+        function goToPage(page) {
+            currentPage = page;
+            renderMerchants();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            // 省份筛选
+            document.getElementById('province-filter').addEventListener('change', (e) => {
+                filterMerchants();
+            });
+
+            // 搜索
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                filterMerchants();
+            });
+
+            // 导出Excel
+            document.getElementById('export-btn').addEventListener('click', exportToExcel);
+
+            // 刷新数据
+            document.getElementById('refresh-btn').addEventListener('click', loadData);
+        }
+
+        // 筛选商家
+        function filterMerchants() {
+            const province = document.getElementById('province-filter').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+
+            filteredMerchants = allMerchants.filter(merchant => {
+                const matchProvince = !province || merchant.province === province;
+                const matchSearch = !search || 
+                    (merchant.title && merchant.title.toLowerCase().includes(search)) ||
+                    (merchant.address && merchant.address.toLowerCase().includes(search)) ||
+                    (merchant.category && merchant.category.toLowerCase().includes(search));
+                
+                return matchProvince && matchSearch;
+            });
+
+            currentPage = 1;
+            renderMerchants();
+        }
+
+        // 导出到Excel
+        function exportToExcel() {
+            if (filteredMerchants.length === 0) {
+                alert('没有数据可导出');
+                return;
+            }
+
+            // 准备数据
+            const data = filteredMerchants.map((merchant, index) => ({
+                '序号': index + 1,
+                '商家名称': merchant.title || '',
+                '省份': merchant.province || '',
+                '地址': merchant.address || '',
+                '类别': merchant.category || '',
+                '电话': merchant.tel || '',
+                '纬度': merchant.location ? merchant.location.lat : '',
+                '经度': merchant.location ? merchant.location.lng : '',
+                '采集时间': merchant.collected_at || ''
+            }));
+
+            // 创建工作簿
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '沉香商家数据');
+
+            // 下载
+            const fileName = `沉香商家数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+    </script>
+</body>
+</html>
